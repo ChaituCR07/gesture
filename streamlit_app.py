@@ -1,40 +1,53 @@
-import altair as alt
-import numpy as np
-import pandas as pd
+
+# Step 1: Import Libraries
+import cv2
+import mediapipe as mp
 import streamlit as st
+# Step 2: Initialize MediaPipe Hands
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands()
+mp_draw = mp.solutions.drawing_utils
+# Step 3: Initialize Video Capture
+cap = cv2.VideoCapture(0)
+# Step 4: Capture and Process Each Frame
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    # Flip the frame horizontally for a later selfie-view display
+    frame = cv2.flip(frame, 1)
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = hands.process(frame_rgb)
+    if results.multi_hand_landmarks:
+        for hand_landmarks in results.multi_hand_landmarks:
+            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-"""
-# Welcome to Streamlit!
+            # Initialize list to store landmark coordinates
+            landmark_list = []
+            for id, lm in enumerate(hand_landmarks.landmark):
+                # Get the coordinates
+                h, w, c = frame.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                landmark_list.append([cx, cy])
+            # Gesture recognition logic
+            if len(landmark_list) != 0:
+                # Example logic for gesture recognition
+                # Open Hand (Palm) Gesture
+                if landmark_list[4][1] < landmark_list[3][1] and landmark_list[8][1] < landmark_list[6][1]:
+                    gesture = "Welcome to Gesture Recognition Project"
+                # Pointing Up Gesture
+                elif landmark_list[4][1] > landmark_list[3][1] and landmark_list[8][1] < landmark_list[6][1]:
+                    gesture = "Hello This is Chaitanya"
+                else:
+                    gesture = None
+                # Display the corresponding text
+                if gesture:
+                    cv2.putText(frame, gesture, (landmark_list[0][0] - 50, landmark_list[0][1] - 50),cv2.FONT_HERSHEY_SIMPLEX, 2,(0, 255, 0), 3, cv2.LINE_AA)  # Increased fontScale and thickness
+    # Step 5: Display the Frame
+    cv2.imshow('Hand Gesture Recognition', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
-
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
-
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
-
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
-
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
-
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+# Step 6: Release Resources
+cap.release()
+cv2.destroyAllWindows()
