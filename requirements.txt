@@ -4,4 +4,4 @@ streamlit
 numpy
 opencv-python-headless
 tensorflow
-mediapipe==0.9.1
+mediapipe
