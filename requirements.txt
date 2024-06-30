@@ -1,3 +1,7 @@
 altair
 pandas
 streamlit
+numpy
+opencv-python
+tensorflow
+mediapipe
