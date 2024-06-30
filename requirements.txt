@@ -2,6 +2,6 @@ altair
 pandas
 streamlit
 numpy
-opencv-python-headless
+opencv-python
 tensorflow
 mediapipe
